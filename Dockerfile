@@ -10,20 +10,19 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pip dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt uvicorn
+    pip install --no-cache-dir -r requirements.txt jinja2
 
 # Copy the application code
 COPY . .
 
-# Ensure Uvicorn is in PATH
-RUN echo "Checking uvicorn installation..." && \
-    python -c "import uvicorn; print('Uvicorn installed successfully')"
+# Ensure jinja2 is installed
+RUN python -c "import jinja2; print('Jinja2 installed successfully')"
 
 # Expose the application's port
 EXPOSE 5000
 
-# Use explicit Python execution to avoid path issues
+# Run FastAPI app with Uvicorn
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
