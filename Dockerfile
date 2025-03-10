@@ -13,16 +13,16 @@ RUN apt-get update && apt-get install -y \
 # Copy the requirements file
 COPY requirements.txt .
 
-# Install dependencies, ensuring Jinja2 is included
+# Install dependencies, ensuring python-multipart is included
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir uvicorn jinja2
+    pip install --no-cache-dir uvicorn jinja2 python-multipart
 
 # Copy the application code
 COPY . .
 
-# Verify Jinja2 installation
-RUN python -c "import jinja2; print('Jinja2 installed successfully')"
+# Verify python-multipart installation
+RUN python -c "import multipart; print('python-multipart installed successfully')"
 
 # Expose the application's port
 EXPOSE 5000
