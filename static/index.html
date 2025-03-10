@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --danger: #e63946;
+            --warning: #fb8500;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .subheading {
+            font-weight: 300;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background-color: rgba(67, 97, 238, 0.05);
+            cursor: pointer;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--secondary);
+            background-color: rgba(114, 9, 183, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-info {
+            color: #6c757d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+        }
+
+        .btn-icon {
+            margin-right: 0.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* Image Editor */
+        .editor-container {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .editor-grid {
+                grid-template-columns: 250px 1fr;
+            }
+        }
+
+        .toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tool-section {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+
+        .tool-section:last-child {
+            border-bottom: none;
+        }
+
+        .tool-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--primary);
+        }
+
+        .slider-container {
+            margin-top: 0.5rem;
+        }
+
+        .slider-value {
+            display: inline-block;
+            width: 35px;
+            text-align: right;
+        }
+
+        .canvas-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            background-color: #f8f9fa;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 70vh;
+            display: block;
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .image-item:hover {
+            transform: scale(1.03);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .face-count {
+            font-weight: 600;
+        }
+
+        /* Loading */
+        .loading-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Tools */
+        .drawing-mode {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .mode-btn {
+            padding: 0.4rem 0.8rem;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Status Alert */
+        .status-alert {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: var(--primary);
+            color: white;
+            box-shadow: var(--shadow);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .status-alert.show {
+            transform: translateY(0);
+        }
+
+        .status-alert.success {
+            background-color: var(--success);
+        }
+
+        .status-alert.error {
+            background-color: var(--danger);
+        }
+
+        /* Instructions */
+        .instructions {
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .instructions ul {
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Face Blur App</h1>
+        <p class="subheading">Protect privacy by blurring faces and sensitive areas in your images</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Upload Section -->
+            <section class="card" id="upload-section">
+                <h2>Upload Images</h2>
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="upload-text">Drag & drop images here or click to browse</p>
+                    <p class="upload-info">Supported formats: JPG, PNG, JPEG</p>
+                </div>
+                <input type="file" id="file-input" class="file-input" accept="image/*" multiple>
+            </section>
+
+            <!-- Image Gallery -->
+            <section class="card" id="gallery-section">
+                <h2>Your Images</h2>
+                <div class="image-gallery" id="image-gallery">
+                    <!-- Images will be added here -->
+                </div>
+            </section>
+
+            <!-- Image Editor -->
+            <section class="card" id="editor-section">
+                <div class="editor-container" id="editor-container">
+                    <h2>Image Editor</h2>
+                    <div class="editor-grid">
+                        <div class="toolbar">
+                            <div class="tool-section">
+                                <div class="tool-title">Blur Settings</div>
+                                <div class="slider-container">
+                                    <label for="blur-radius">Blur Radius: <span id="blur-radius-value" class="slider-value">10</span></label>
+                                    <input type="range" id="blur-radius" min="5" max="100" value="10" class="slider">
+                                </div>
+                            </div>
+
+                            <div class="tool-section">
+                                <div class="tool-title">Blur Mode</div>
+                                <div class="drawing-mode">
+                                    <button class="mode-btn active" id="face-mode">Face Blur</button>
+                                    <button class="mode-btn" id="custom-mode">Custom Area</button>
+                                </div>
+                                <div class="instructions">
+                                    <strong>Instructions:</strong>
+                                    <ul>
+                                        <li><strong>Face Blur:</strong> Click on a detected face to blur it</li>
+                                        <li><strong>Custom Area:</strong> Click and drag to create a custom blur area</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="tool-section">
+                                <div class="tool-title">Actions</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-warning" id="undo-btn">
+                                        <i class="fas fa-undo btn-icon"></i>Undo
+                                    </button>
+                                    <button class="btn btn-danger" id="reset-btn">
+                                        <i class="fas fa-trash btn-icon"></i>Reset
+                                    </button>
+                                    <button class="btn btn-success" id="save-btn">
+                                        <i class="fas fa-download btn-icon"></i>Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="canvas-container" id="canvas-container">
+                            <canvas id="editor-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Loading Spinner -->
+    <div class="loading-container" id="loading-container">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Status Alert -->
+    <div class="status-alert" id="status-alert"></div>
+
+    <script>
+        // API Configuration
+        const API_URL = 'http://localhost:8000'; // Change this to match your API server
+        
+        // DOM Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const imageGallery = document.getElementById('image-gallery');
+        const editorContainer = document.getElementById('editor-container');
+        const canvas = document.getElementById('editor-canvas');
+        const ctx = canvas.getContext('2d');
+        const blurRadiusSlider = document.getElementById('blur-radius');
+        const blurRadiusValue = document.getElementById('blur-radius-value');
+        const faceModeBtn = document.getElementById('face-mode');
+        const customModeBtn = document.getElementById('custom-mode');
+        const undoBtn = document.getElementById('undo-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const loadingContainer = document.getElementById('loading-container');
+        const statusAlert = document.getElementById('status-alert');
+
+        // State variables
+        let images = [];
+        let currentImage = null;
+        let drawingMode = 'face'; // 'face' or 'custom'
+        let isDrawing = false;
+        let drawingPoints = [];
+        let blurRadius = 10;
+
+        // Initialize
+        function init() {
+            // Event listeners
+            uploadArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            blurRadiusSlider.addEventListener('input', handleBlurRadiusChange);
+            faceModeBtn.addEventListener('click', () => setDrawingMode('face'));
+            customModeBtn.addEventListener('click', () => setDrawingMode('custom'));
+            undoBtn.addEventListener('click', handleUndo);
+            resetBtn.addEventListener('click', handleReset);
+            saveBtn.addEventListener('click', handleSave);
+
+            // Canvas event listeners
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('mouseout', handleCanvasMouseOut);
+        }
+
+        // Event handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files) {
+                handleFiles(e.dataTransfer.files);
+            }
+        }
+
+        function handleFileSelect(e) {
+            handleFiles(fileInput.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            showLoading();
+            
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+            
+            fetch(`${API_URL}/upload/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                images = [...images, ...data];
+                renderGallery();
+                hideLoading();
+                showAlert('Images uploaded successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error uploading images:', error);
+                hideLoading();
+                showAlert('Error uploading images. Please try again.', 'error');
+            });
+        }
+
+        function handleBlurRadiusChange(e) {
+            blurRadius = parseInt(e.target.value);
+            blurRadiusValue.textContent = blurRadius;
+        }
+
+        function setDrawingMode(mode) {
+            drawingMode = mode;
+            
+            if (mode === 'face') {
+                faceModeBtn.classList.add('active');
+                customModeBtn.classList.remove('active');
+            } else {
+                faceModeBtn.classList.remove('active');
+                customModeBtn.classList.add('active');
+            }
+        }
+
+        function handleCanvasMouseDown(e) {
+            if (!currentImage) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // Convert click coordinates to canvas coordinates
+            const canvasX = (clickX / rect.width) * canvas.width;
+            const canvasY = (clickY / rect.height) * canvas.height;
+            
+            if (drawingMode === 'face') {
+                applyFaceBlur(canvasX, canvasY);
+            } else {
+                isDrawing = true;
+                drawingPoints = [{x: canvasX, y: canvasY}];
+                redrawCanvas(true);
+            }
+        }
+
+        // Update the handleCanvasMouseMove function
+        function handleCanvasMouseMove(e) {
+            if (!isDrawing || !currentImage) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            // Convert click coordinates to canvas coordinates
+            const canvasX = (clickX / rect.width) * canvas.width;
+            const canvasY = (clickY / rect.height) * canvas.height;
+            
+            drawingPoints.push({x: canvasX, y: canvasY});
+            redrawCanvas(true);
+        }
+        
+        function handleCanvasMouseUp(e) {
+            if (!isDrawing || !currentImage) return;
+            
+            if (drawingPoints.length > 2) {
+                applyCustomBlur(drawingPoints);
+            }
+            
+            isDrawing = false;
+            drawingPoints = [];
+        }
+
+        function handleCanvasMouseOut(e) {
+            if (isDrawing) {
+                isDrawing = false;
+                drawingPoints = [];
+                redrawCanvas();
+            }
+        }
+
+        function handleUndo() {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            fetch(`${API_URL}/undo/${currentImage.image_id}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadImage(currentImage.image_id, true);
+                hideLoading();
+                showAlert('Last operation undone', 'success');
+            })
+            .catch(error => {
+                console.error('Error undoing operation:', error);
+                hideLoading();
+                showAlert('Error undoing operation', 'error');
+            });
+        }
+
+        function handleReset() {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            fetch(`${API_URL}/reset/${currentImage.image_id}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadImage(currentImage.image_id, true);
+                hideLoading();
+                showAlert('Image reset to original', 'success');
+            })
+            .catch(error => {
+                console.error('Error resetting image:', error);
+                hideLoading();
+                showAlert('Error resetting image', 'error');
+            });
+        }
+
+        function handleSave() {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            fetch(`${API_URL}/save/${currentImage.image_id}`, {
+                method: 'POST'
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `blurred_${currentImage.original_filename}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                hideLoading();
+                showAlert('Image saved successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error saving image:', error);
+                hideLoading();
+                showAlert('Error saving image', 'error');
+            });
+        }
+
+        // UI functions
+        function renderGallery() {
+            imageGallery.innerHTML = '';
+            
+            if (images.length === 0) {
+                imageGallery.innerHTML = '<p>No images uploaded yet. Upload some images to get started.</p>';
+                return;
+            }
+            
+            images.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.innerHTML = `
+                    <img src="${API_URL}${image.preview_url}" alt="${image.original_filename}">
+                    <div class="image-overlay">
+                        <span class="face-count">${image.faces_detected} faces detected</span>
+                    </div>
+                `;
+                imageItem.addEventListener('click', () => loadImage(image.image_id));
+                imageGallery.appendChild(imageItem);
+            });
+        }
+
+        function loadImage(imageId, refresh = false) {
+            showLoading();
+            
+            fetch(`${API_URL}/status/${imageId}`)
+            .then(response => response.json())
+            .then(imageData => {
+                if (refresh) {
+                    // Just update the current image with fresh data
+                    const index = images.findIndex(img => img.image_id === imageId);
+                    if (index !== -1) {
+                        images[index] = imageData;
+                    }
+                } else {
+                    // Set as current image and show editor
+                    currentImage = imageData;
+                    editorContainer.style.display = 'flex';
+                }
+                
+                // Load the image to canvas
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    // Store original dimensions in the currentImage object
+                    currentImage.original_width = img.width;
+                    currentImage.original_height = img.height;
+                    
+                    // Calculate dimensions to fit the canvas container while maintaining aspect ratio
+                    const canvasContainer = document.getElementById('canvas-container');
+                    const containerWidth = canvasContainer.clientWidth;
+                    const containerHeight = 500; // Fixed height or you can use canvasContainer.clientHeight
+                    
+                    const aspectRatio = img.width / img.height;
+                    
+                    let canvasWidth, canvasHeight;
+                    
+                    if (containerWidth / containerHeight > aspectRatio) {
+                        // Container is wider than image aspect ratio
+                        canvasHeight = Math.min(containerHeight, img.height);
+                        canvasWidth = canvasHeight * aspectRatio;
+                    } else {
+                        // Container is taller than image aspect ratio
+                        canvasWidth = Math.min(containerWidth, img.width);
+                        canvasHeight = canvasWidth / aspectRatio;
+                    }
+                    
+                    // Set canvas dimensions
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
+                    
+                    // Store the scale factors for coordinate transformation
+                    currentImage.scaleX = canvasWidth / img.width;
+                    currentImage.scaleY = canvasHeight / img.height;
+                    
+                    // Draw the image
+                    ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+                    
+                    // Draw face rectangles if in face mode
+                    if (drawingMode === 'face') {
+                        drawFaceRectangles();
+                    }
+                    
+                    hideLoading();
+                };
+                img.onerror = function() {
+                    hideLoading();
+                    showAlert('Error loading image', 'error');
+                };
+                img.src = `${API_URL}${imageData.preview_url}?t=${new Date().getTime()}`; // Add timestamp to prevent caching
+            })
+            .catch(error => {
+                console.error('Error loading image:', error);
+                hideLoading();
+                showAlert('Error loading image data', 'error');
+            });
+        }
+        function drawFaceRectangles() {
+            if (!currentImage || !currentImage.faces) return;
+            
+            ctx.strokeStyle = '#4cc9f0';
+            ctx.lineWidth = 2;
+            
+            currentImage.faces.forEach(face => {
+                // Scale face coordinates from original image to canvas size
+                const x = face.x * currentImage.scaleX;
+                const y = face.y * currentImage.scaleY;
+                const width = face.width * currentImage.scaleX;
+                const height = face.height * currentImage.scaleY;
+                
+                ctx.strokeRect(x, y, width, height);
+            });
+        }
+        function redrawCanvas(showDrawing = false) {
+            if (!currentImage) return;
+            
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                if (drawingMode === 'face') {
+                    drawFaceRectangles();
+                } else if (showDrawing && drawingPoints.length > 1) {
+                    // Draw the custom selection outline
+                    ctx.beginPath();
+                    ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+                    
+                    for (let i = 1; i < drawingPoints.length; i++) {
+                        ctx.lineTo(drawingPoints[i].x, drawingPoints[i].y);
+                    }
+                    
+                    ctx.strokeStyle = '#7209b7';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            };
+            img.src = `${API_URL}${currentImage.preview_url}?t=${new Date().getTime()}`;
+        }
+
+        // API functions
+        function applyFaceBlur(x, y) {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            // Convert canvas coordinates to original image coordinates
+            const originalX = Math.round(x / currentImage.scaleX);
+            const originalY = Math.round(y / currentImage.scaleY);
+            
+            fetch(`${API_URL}/blur/face/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image_id: currentImage.image_id,
+                    x: originalX,
+                    y: originalY,
+                    radius: blurRadius
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadImage(currentImage.image_id, true);
+                hideLoading();
+                showAlert('Face blurred successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error applying face blur:', error);
+                hideLoading();
+                showAlert('Error applying blur', 'error');
+            });
+        }
+
+        // Update the applyCustomBlur function
+        function applyCustomBlur(points) {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            // Convert canvas points to original image points
+            const apiPoints = points.map(point => [
+                Math.round(point.x / currentImage.scaleX), 
+                Math.round(point.y / currentImage.scaleY)
+            ]);
+            
+            fetch(`${API_URL}/blur/selection/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image_id: currentImage.image_id,
+                    points: apiPoints,
+                    radius: blurRadius
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadImage(currentImage.image_id, true);
+                hideLoading();
+                showAlert('Custom area blurred successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error applying custom blur:', error);
+                hideLoading();
+                showAlert('Error applying blur', 'error');
+            });
+        }
+        // Helper functions
+        function showLoading() {
+            loadingContainer.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingContainer.style.display = 'none';
+        }
+
+        function showAlert(message, type = 'success') {
+            statusAlert.textContent = message;
+            statusAlert.className = 'status-alert';
+            statusAlert.classList.add(type);
+            statusAlert.classList.add('show');
+            
+            setTimeout(() => {
+                statusAlert.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
