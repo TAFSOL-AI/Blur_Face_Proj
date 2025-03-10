@@ -10,19 +10,22 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy the requirements file
 COPY requirements.txt .
+
+# Install dependencies, ensuring python-multipart is included
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt jinja2
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir uvicorn python-multipart
 
 # Copy the application code
 COPY . .
 
-# Ensure jinja2 is installed
-RUN python -c "import jinja2; print('Jinja2 installed successfully')"
+# Verify python-multipart installation
+RUN python -c "import multipart; print('python-multipart installed successfully')"
 
 # Expose the application's port
 EXPOSE 5000
 
-# Run FastAPI app with Uvicorn
+# Run the FastAPI app using python -m uvicorn
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
