@@ -126,7 +126,7 @@ async def upload_images(files: List[UploadFile] = File(...)):
             "original_filename": file.filename,
             "faces_detected": len(faces),
             "faces": face_list,
-            "preview_url": f"/images/{image_id}{file_extension}"
+            "preview_url": request.base_url._url + f"images/{image_id}{file_extension}"
         })
     
     return result
