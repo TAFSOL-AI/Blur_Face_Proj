@@ -123,7 +123,7 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)): 
             face_list.append({"x": int(x), "y": int(y), "width": int(w), "height": int(h)})
         
         # ✅ Dynamically generate the correct preview URL
-        preview_url = f"{request.base_url.rstrip('/')}/images/{image_id}{file_extension}"
+        preview_url = str(request.base_url) + f"images/{image_id}{file_extension}"
 
         result.append({
             "image_id": image_id,
