@@ -4,6 +4,12 @@ FROM python:3.10
 # Set the working directory
 WORKDIR /app
 
+# Install system dependencies required for OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -12,11 +18,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the application code
 COPY . .
 
-# Ensure uvicorn is installed
-RUN pip install uvicorn
-
 # Expose the application's port
 EXPOSE 5000
 
 # Set the command to run the FastAPI app
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
