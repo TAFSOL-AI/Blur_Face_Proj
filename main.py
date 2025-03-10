@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse,FileResponse
 
+
 templates = Jinja2Templates(directory="templates")
 
 # Setup logging
@@ -73,7 +74,7 @@ async def get_index():
 
 
 @app.post("/upload/")
-async def upload_images(files: List[UploadFile] = File(...)):
+async def upload_images(request: Request, files: List[UploadFile] = File(...)):  # Add `request` as a parameter
     """Upload multiple images for processing"""
     result = []
     
@@ -121,12 +122,15 @@ async def upload_images(files: List[UploadFile] = File(...)):
         for (x, y, w, h) in faces:
             face_list.append({"x": int(x), "y": int(y), "width": int(w), "height": int(h)})
         
+        # ✅ Dynamically generate the correct preview URL
+        preview_url = str(request.base_url) + f"images/{image_id}{file_extension}"
+
         result.append({
             "image_id": image_id,
             "original_filename": file.filename,
             "faces_detected": len(faces),
             "faces": face_list,
-            "preview_url": request.base_url._url + f"images/{image_id}{file_extension}"
+            "preview_url": preview_url
         })
     
     return result
