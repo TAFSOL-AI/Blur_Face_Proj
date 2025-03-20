@@ -403,6 +403,17 @@
                                 </div>
                             </div>
 
+                            <div class="tool-section" id="adjust-blur-section" style="display: none;">
+                                <div class="tool-title">Adjust Last Blur</div>
+                                <div class="slider-container">
+                                    <label for="adjust-blur-radius">Blur Radius: <span id="adjust-blur-radius-value" class="slider-value">10</span></label>
+                                    <input type="range" id="adjust-blur-radius" min="5" max="100" value="10" class="slider">
+                                </div>
+                                <button class="btn" id="apply-adjust-btn" style="margin-top: 10px;">
+                                    <i class="fas fa-check btn-icon"></i>Apply Adjustment
+                                </button>
+                            </div>
+
                             <div class="tool-section">
                                 <div class="tool-title">Blur Mode</div>
                                 <div class="drawing-mode">
@@ -452,7 +463,7 @@
 
     <script>
         // API Configuration
-        const API_URL = 'https://blur-face.devcustomprojects.com'; // Change this to match your API server
+        const API_URL = 'http://localhost:5010'; // Change this to match your API server
         
         // DOM Elements
         const uploadArea = document.getElementById('upload-area');
@@ -470,6 +481,10 @@
         const saveBtn = document.getElementById('save-btn');
         const loadingContainer = document.getElementById('loading-container');
         const statusAlert = document.getElementById('status-alert');
+        const adjustBlurSection = document.getElementById('adjust-blur-section');
+        const adjustBlurRadiusSlider = document.getElementById('adjust-blur-radius');
+        const adjustBlurRadiusValue = document.getElementById('adjust-blur-radius-value');
+        const applyAdjustBtn = document.getElementById('apply-adjust-btn');
 
         // State variables
         let images = [];
@@ -493,6 +508,8 @@
             undoBtn.addEventListener('click', handleUndo);
             resetBtn.addEventListener('click', handleReset);
             saveBtn.addEventListener('click', handleSave);
+            adjustBlurRadiusSlider.addEventListener('input', handleAdjustBlurRadiusChange);
+            applyAdjustBtn.addEventListener('click', handleApplyAdjustBlur);
 
             // Canvas event listeners
             canvas.addEventListener('mousedown', handleCanvasMouseDown);
@@ -638,6 +655,16 @@
                 loadImage(currentImage.image_id, true);
                 hideLoading();
                 showAlert('Last operation undone', 'success');
+                
+                // Get the image status to check if there's still a last blur operation
+                fetch(`${API_URL}/status/${currentImage.image_id}`)
+                .then(response => response.json())
+                .then(imageData => {
+                    // If there's no last blur operation, hide the adjust section
+                    if (!imageData.last_blur_available) {
+                        adjustBlurSection.style.display = 'none';
+                    }
+                });
             })
             .catch(error => {
                 console.error('Error undoing operation:', error);
@@ -659,6 +686,9 @@
                 loadImage(currentImage.image_id, true);
                 hideLoading();
                 showAlert('Image reset to original', 'success');
+                
+                // Hide the adjust blur section
+                adjustBlurSection.style.display = 'none';
             })
             .catch(error => {
                 console.error('Error resetting image:', error);
@@ -695,6 +725,39 @@
             });
         }
 
+        function handleAdjustBlurRadiusChange(e) {
+            const radius = parseInt(e.target.value);
+            adjustBlurRadiusValue.textContent = radius;
+        }
+
+        // Add this new function for applying the adjusted blur
+        function handleApplyAdjustBlur() {
+            if (!currentImage) return;
+            
+            showLoading();
+            
+            fetch(`${API_URL}/adjust-blur/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image_id: currentImage.image_id,
+                    radius: parseInt(adjustBlurRadiusSlider.value)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadImage(currentImage.image_id, true);
+                hideLoading();
+                showAlert('Blur intensity adjusted successfully', 'success');
+            })
+            .catch(error => {
+                console.error('Error adjusting blur:', error);
+                hideLoading();
+                showAlert('Error adjusting blur', 'error');
+            });
+        }
         // UI functions
         function renderGallery() {
             imageGallery.innerHTML = '';
@@ -864,6 +927,11 @@
                 loadImage(currentImage.image_id, true);
                 hideLoading();
                 showAlert('Face blurred successfully', 'success');
+                
+                // Show the adjust blur section
+                adjustBlurSection.style.display = 'block';
+                adjustBlurRadiusSlider.value = blurRadius;
+                adjustBlurRadiusValue.textContent = blurRadius;
             })
             .catch(error => {
                 console.error('Error applying face blur:', error);
@@ -900,6 +968,11 @@
                 loadImage(currentImage.image_id, true);
                 hideLoading();
                 showAlert('Custom area blurred successfully', 'success');
+                
+                // Show the adjust blur section
+                adjustBlurSection.style.display = 'block';
+                adjustBlurRadiusSlider.value = blurRadius;
+                adjustBlurRadiusValue.textContent = blurRadius;
             })
             .catch(error => {
                 console.error('Error applying custom blur:', error);
@@ -907,6 +980,7 @@
                 showAlert('Error applying blur', 'error');
             });
         }
+        
         // Helper functions
         function showLoading() {
             loadingContainer.style.display = 'flex';
