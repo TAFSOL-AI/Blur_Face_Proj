@@ -13,19 +13,15 @@ RUN apt-get update && apt-get install -y \
 # Copy the requirements file
 COPY requirements.txt .
 
-# Install dependencies, ensuring python-multipart is included
+# Install dependencies, including python-multipart
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir uvicorn jinja2 python-multipart
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . .
 
-# Verify python-multipart installation
-RUN python -c "import multipart; print('python-multipart installed successfully')"
-
 # Expose the application's port
 EXPOSE 5000
 
-# Run the FastAPI app using python -m uvicorn
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+# Run the FastAPI app using uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
